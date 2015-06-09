@@ -16,16 +16,18 @@ NSString *const SIAlertViewDidDismissNotification = @"SIAlertViewDidDismissNotif
 
 #define DEBUG_LAYOUT 0
 
-#define MESSAGE_MIN_LINE_COUNT 3
+#define MESSAGE_MIN_LINE_COUNT 0//3
 #define MESSAGE_MAX_LINE_COUNT 20
-#define GAP 10
+#define GAP 0//10
 #define CANCEL_BUTTON_PADDING_TOP 5
 #define CONTENT_PADDING_LEFT 10
-#define CONTENT_PADDING_TOP 15
-#define CONTENT_PADDING_BOTTOM 10
-#define BUTTON_HEIGHT 44
+#define CONTENT_PADDING_TOP 18
+#define CONTENT_PADDING_BOTTOM 0//10
+#define BUTTON_HEIGHT 46
 #define CONTAINER_WIDTH 280
 #define MESSAGE_INSET 30
+#define MESSAGE_PADDING_TOP 8
+#define MESSAGE_PADDING_BOTTOM 22
 
 
 const UIWindowLevel UIWindowLevelSIAlert = 1999.0;  // don't overlap system's alert
@@ -107,6 +109,7 @@ static SIAlertView *__si_alert_current_view;
 @property (nonatomic, strong) UILabel *messageLabel;
 @property (nonatomic, strong) UIView *containerView;
 @property (nonatomic, strong) UIView *titleBackground;
+@property (nonatomic, strong) UIView *buttonDivider;
 @property (nonatomic, strong) NSMutableArray *buttons;
 
 @property (nonatomic, assign, getter = isLayoutDirty) BOOL layoutDirty;
@@ -302,6 +305,7 @@ static SIAlertView *__si_alert_current_view;
     appearance.buttonColor = [UIColor colorWithWhite:0.4 alpha:1];
     appearance.cancelButtonColor = [UIColor colorWithWhite:0.3 alpha:1];
     appearance.destructiveButtonColor = [UIColor whiteColor];
+    appearance.buttonDividerColor = [UIColor colorWithWhite:161 / 255.0f alpha:1.0f];
     appearance.cornerRadius = 2;
     appearance.shadowRadius = 8;
 }
@@ -810,15 +814,16 @@ static SIAlertView *__si_alert_current_view;
 	}
     if (self.titleBackground) {
         CGRect frame = self.titleLabel.frame;
-        frame.size.height += CONTENT_PADDING_TOP*2.0f;
+//        frame.size.height += CONTENT_PADDING_TOP*2.0f;
         frame.size.width = self.containerView.frame.size.width;
         self.titleBackground.frame = frame;
         self.titleBackground.center = self.titleLabel.center;
-        y += CONTENT_PADDING_TOP;
+//        y += CONTENT_PADDING_TOP;
     }
     if (self.messageLabel) {
         if (y > CONTENT_PADDING_TOP) {
-            y += GAP;
+//            y += GAP;
+            y += MESSAGE_PADDING_TOP;
         }
         self.messageLabel.text = self.message;
         CGFloat height = [self heightForMessageLabel];
@@ -828,9 +833,21 @@ static SIAlertView *__si_alert_current_view;
     }
     if (self.items.count > 0) {
         if (y > CONTENT_PADDING_TOP) {
-            y += GAP;
+//            y += GAP;
+            y += MESSAGE_PADDING_BOTTOM;
         }
+        
+        self.buttonDivider.frame = CGRectMake(0, y, self.containerView.bounds.size.width, 1.0f);
+        y += self.buttonDivider.frame.size.height;
+        
         if (self.items.count == 2 && self.buttonsListStyle == SIAlertViewButtonsListStyleNormal) {
+            CGFloat dividerInset = 1;
+            CGRect dividerFrame = CGRectMake(0, y + 1, 1.0f, BUTTON_HEIGHT - dividerInset*2.0f);
+            UIView *divider = [[UIView alloc] initWithFrame:dividerFrame];
+            divider.center = (CGPoint) {CONTAINER_WIDTH / 2.0f, divider.center.y};
+            divider.backgroundColor = self.buttonDividerColor;
+            [self.containerView addSubview:divider];
+            
             CGFloat width = (self.containerView.bounds.size.width - CONTENT_PADDING_LEFT * 2 - GAP) * 0.5;
             UIButton *button = self.buttons[0];
             button.frame = CGRectMake(CONTENT_PADDING_LEFT, y, width, BUTTON_HEIGHT);
@@ -855,23 +872,28 @@ static SIAlertView *__si_alert_current_view;
 
 - (CGFloat)preferredHeight
 {
-	CGFloat height = CONTENT_PADDING_TOP;
+    CGFloat height = CONTENT_PADDING_TOP;
 	if (self.title) {
 		height += [self heightForTitleLabel];
 	}
-    if(self.titleBackground) {
+    if(self.titleBackground.backgroundColor != [UIColor clearColor]) {
         height += CONTENT_PADDING_TOP;
     }
     if (self.message) {
         if (height > CONTENT_PADDING_TOP) {
-            height += GAP;
+//            height += GAP;
+            height += MESSAGE_PADDING_TOP;
         }
         height += [self heightForMessageLabel];
     }
     if (self.items.count > 0) {
         if (height > CONTENT_PADDING_TOP) {
-            height += GAP;
+//            height += GAP;
+            height += MESSAGE_PADDING_BOTTOM;
         }
+        
+        height += 1.0f;
+        
         if (self.items.count <= 2 && self.buttonsListStyle == SIAlertViewButtonsListStyleNormal) {
             height += BUTTON_HEIGHT;
         } else {
@@ -953,7 +975,10 @@ static SIAlertView *__si_alert_current_view;
     self.titleBackground = [[UIView alloc] init];
     self.titleBackground.backgroundColor = self.titleBackgroundColor;
     [self.containerView addSubview:self.titleBackground];
-
+    
+    self.buttonDivider = [[UIView alloc] init];
+    self.buttonDivider.backgroundColor = self.buttonDividerColor;
+    [self.containerView addSubview:self.buttonDivider];
 }
 
 - (void)updateTitleLabel
@@ -1135,6 +1160,15 @@ static SIAlertView *__si_alert_current_view;
     }
     _titleBackgroundColor = titleBackgroundColor;
     self.titleBackground.backgroundColor = titleBackgroundColor;
+}
+
+- (void)setButtonDividerColor:(UIColor *)buttonDividerColor
+{
+    if(_buttonDividerColor == buttonDividerColor) {
+        return;
+    }
+    _buttonDividerColor = buttonDividerColor;
+    self.buttonDivider.backgroundColor = buttonDividerColor;
 }
 
 - (void)setMessageColor:(UIColor *)messageColor
