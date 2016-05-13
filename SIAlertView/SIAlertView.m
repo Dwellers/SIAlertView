@@ -641,7 +641,12 @@ static SIAlertView *__si_alert_current_view;
                              animations:^{
                                  self.containerView.alpha = 1.0f;
                                  self.containerView.layer.transform = CATransform3DMakeScale(1.0f, 1.0f, 1.0f);
-                             } completion:nil];
+                             }
+                             completion:^(BOOL finished) {
+                                 if (completion) {
+                                     completion();
+                                 }
+                             }];
             
         }
             break;
